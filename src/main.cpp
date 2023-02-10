@@ -124,12 +124,14 @@ void displayFoundSequence(const std::vector<int> &foundSequence)
     std::cout << "\n";
 }
 
-void findSequence()
+std::vector<int> findSequence()
 {
     int w, h;
     pA->size(w, h);
     std::vector<int> foundSequence;
     bool found = false;
+    bool vert = false;
+
     // loop over cells in first row
     for (int c = 0; c < w; c++)
     {
@@ -142,38 +144,70 @@ void findSequence()
             found = true;
         }
 
-        if (found)
+        while (found) 
         {
-            // found a possible starting cell in the first row
-            // look for the next sequence value in the same column
+            // found possible starting cell
 
-            auto pmCell = pA->cell(foundSequence[0]);
+            // toggle search direction
+            vert = (!vert);
+
+            // start from last cell found
+            auto pmCell = pA->cell(foundSequence.back());
             int c, r;
             pA->coords(c, r, pmCell);
 
-            std::string nextValue = vSequence[0][1];
+            // look for next value in required sequence
+            std::string nextValue = vSequence[0][foundSequence.size()];
             found = false;
 
-            // loop over cells in colum
-            for (int r2 = 1; r2 < w; r2++)
+            if (vert)
             {
-                if (pA->cell(c, r2)->value == nextValue)
+                // loop over cells in column
+                for (int r2 = 1; r2 < w; r2++)
                 {
-                    foundSequence.push_back(pA->cell(c, r2)->ID());
-                    displayFoundSequence(foundSequence);
-                    found = true;
-                    break;
+                    if (pA->cell(c, r2)->value == nextValue)
+                    {
+                        foundSequence.push_back(pA->cell(c, r2)->ID());
+                        found = true;
+                        break;
+                    }
                 }
             }
-            if (!found)
+            else
+            {
+                // loop over cells in row
+                for (int c2 = 0; c2 < h; c2++)
+                {
+                    if (pA->cell(c2, r)->value == nextValue)
+                    {
+                        foundSequence.push_back(pA->cell(c2, r)->ID());
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            if (!found) {
+                // dead end - try starting from next cell in first row
                 break;
+            }
+
+            if( foundSequence.size() == vSequence[0].size()) {
+
+                // success!!!
+                return foundSequence;
+            }
         }
     }
+    std::cout << "Cannot find sequence\n";
+    exit(1);
 }
 
 main()
 {
     read("../data/data1.txt");
-    findSequence();
+
+    displayFoundSequence(
+         findSequence() );
+
     return 0;
 }

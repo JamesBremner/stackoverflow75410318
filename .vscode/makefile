@@ -1,32 +1,31 @@
 #source file search paths
-VPATH = ./src 
+VPATH = ./src ../autocell/src
 
 	# compiler include search paths
 INCS = -I./include \
-	-I../ravencode/pub/src \
+	-I../windex/include \
 	-I../raven-set \
-	-I../boost/boost1_78 
+	-I../autocell/src
+
 
 LIBS = \
-	-lgdiplus -lgdi32 -lcomdlg32 -lstdc++fs \
-	-L../boost/boost1_78/lib \
-		-lboost_system-mgw11-mt-x64-1_78 \
-		-lboost_program_options-mgw11-mt-x64-1_78 \
-		# -lboost_thread-mgw11-mt-x64-1_7 \
+	-lgdiplus -lgdi32 -lcomdlg32 -lstdc++fs -lComctl32 \
+
 	#-mwindows
 
 static_link_flags = -static-libstdc++ -static-libgcc -static
 
 # folders
 ODIR = ./.vscode/obj
-RDIR = ../ravencode/pub/src
+
 
 OPT = -g
 CCflags = -std=c++17 $(OPT) -D_mingw_
 
 # sources
 OBJ_starter = \
-	$(ODIR)/main.o 
+	$(ODIR)/main.o \
+	$(ODIR)/autocell.o
 
 ### COMPILE
 

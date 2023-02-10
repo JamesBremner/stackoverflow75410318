@@ -1,0 +1,13 @@
+
+m 3A 3A 10 9B Z Z Z Z Z Z 
+m Z Z Z Z Z Z Z Z Z Z 
+m Z Z Z Z Z Z Z Z Z Z 
+m Z Z Z Z Z Z Z Z Z Z 
+m Z Z Z Z Z Z Z Z Z Z 
+m Z Z Z Z Z Z Z Z Z Z 
+m Z Z Z Z Z Z Z Z Z Z 
+m 9B 72 3A 10 Z Z Z Z Z Z 
+m 10 3A 3A 3A Z Z Z Z Z Z 
+m 3A 10 3A 9B Z Z Z Z Z Z 
+s 3A 10 9B
+

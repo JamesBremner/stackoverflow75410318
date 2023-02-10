@@ -7,6 +7,7 @@
 #include <wex.h>
 #include "cStarterGUI.h"
 #include "autocell.h"
+#include "cRunWatch.h"
 
 class cGUI : public cStarterGUI
 {
@@ -126,6 +127,8 @@ void displayFoundSequence(const std::vector<int> &foundSequence)
 
 std::vector<int> findSequence()
 {
+    raven::set::cRunWatch aWatcher("findSequence");
+
     int w, h;
     pA->size(w, h);
     std::vector<int> foundSequence;
@@ -204,10 +207,14 @@ std::vector<int> findSequence()
 
 main()
 {
-    read("../data/data1.txt");
+    raven::set::cRunWatch::Start();
+
+    read("../data/data10x10.txt");
+
 
     displayFoundSequence(
          findSequence() );
 
+    raven::set::cRunWatch::Report();
     return 0;
 }

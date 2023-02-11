@@ -109,7 +109,7 @@ void read(const std::string &fname)
     }
 
     // display matrix
-    std::cout << pA->text() << "\n";
+    // std::cout << pA->text() << "\n";
 }
 
 void displayFoundSequence(const std::vector<int> &foundSequence)
@@ -125,7 +125,7 @@ void displayFoundSequence(const std::vector<int> &foundSequence)
     std::cout << "\n";
 }
 
-std::vector<int> findSequence()
+std::vector<int> findSequence(int seqNo)
 {
     raven::set::cRunWatch aWatcher("findSequence");
 
@@ -141,13 +141,13 @@ std::vector<int> findSequence()
         foundSequence.clear();
         found = false;
 
-        if (pA->cell(c, 0)->value == vSequence[0][0])
+        if (pA->cell(c, 0)->value == vSequence[seqNo][0])
         {
             foundSequence.push_back(pA->cell(c, 0)->ID());
             found = true;
         }
 
-        while (found) 
+        while (found)
         {
             // found possible starting cell
 
@@ -160,7 +160,7 @@ std::vector<int> findSequence()
             pA->coords(c, r, pmCell);
 
             // look for next value in required sequence
-            std::string nextValue = vSequence[0][foundSequence.size()];
+            std::string nextValue = vSequence[seqNo][foundSequence.size()];
             found = false;
 
             if (vert)
@@ -189,12 +189,14 @@ std::vector<int> findSequence()
                     }
                 }
             }
-            if (!found) {
+            if (!found)
+            {
                 // dead end - try starting from next cell in first row
                 break;
             }
 
-            if( foundSequence.size() == vSequence[0].size()) {
+            if (foundSequence.size() == vSequence[seqNo].size())
+            {
 
                 // success!!!
                 return foundSequence;
@@ -202,18 +204,29 @@ std::vector<int> findSequence()
         }
     }
     std::cout << "Cannot find sequence\n";
-    exit(1);
+    foundSequence.clear();
+    return foundSequence;
 }
 
 main()
 {
     raven::set::cRunWatch::Start();
 
-    read("../data/data10x10.txt");
+    read("../data/data3.txt");
 
+    std::cout << "Searching\n"
+              << pA->text() << "\n";
 
-    displayFoundSequence(
-         findSequence() );
+    for (int seqNo = 0; seqNo < vSequence.size(); seqNo++)
+    {
+
+        std::cout << "for sequence ";
+        for (auto &v : vSequence[seqNo])
+            std::cout << v << " ";
+        std::cout << "\n\n";
+        displayFoundSequence(
+            findSequence(seqNo));
+    }
 
     raven::set::cRunWatch::Report();
     return 0;

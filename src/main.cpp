@@ -9,26 +9,6 @@
 #include "autocell.h"
 #include "cRunWatch.h"
 
-class cGUI : public cStarterGUI
-{
-public:
-    cGUI()
-        : cStarterGUI(
-              "Starter",
-              {50, 50, 1000, 500}),
-          lb(wex::maker::make<wex::label>(fm))
-    {
-        lb.move(50, 50, 100, 30);
-        lb.text("Hello World");
-
-        show();
-        run();
-    }
-
-private:
-    wex::label &lb;
-};
-
 class mcell : public cell::cCell
 {
 public:
@@ -46,10 +26,58 @@ public:
     }
 };
 
-cell::cAutomaton<mcell> *pA;
-std::vector<std::vector<std::string>> vSequence;
+class cSequenceHunter
+{
+public:
+    void read(const std::string &fname);
 
-std::vector<std::string> tokenize(const std::string &line)
+    std::vector<int> findSequenceStart(int seqNo);
+
+    int sequenceCount() const;
+
+    void displayMatrix() const;
+    void displaySequence(int seqNo) const;
+    void displayFoundSequence(
+        const std::vector<int> &foundSequence) const;
+
+private:
+    cell::cAutomaton<mcell> *matrix;
+    std::vector<std::vector<std::string>> vSequence;
+
+    /// @brief Find sequence with given start point
+    /// @matrixram[in] seqNo index of sequence sought
+    /// @matrixram[in] foundSequence vector with index of starting cell
+    /// @matrixram[out] foundSequence vector with indices of cells in sequence, or empty on failure
+    /// @matrixram[in] vert true if previous move was vertical
+    /// @return true if sequence found
+
+    bool findSequenceFromStart(
+        int seqNo,
+        std::vector<int> &foundSequence,
+        bool vert);
+
+    std::vector<std::string>
+    tokenize(
+        const std::string &line);
+};
+
+int cSequenceHunter::sequenceCount() const
+{
+    return vSequence.size();
+}
+void cSequenceHunter::displayMatrix() const
+{
+    std::cout << matrix->text() << "\n";
+}
+void cSequenceHunter::displaySequence(int seqNo) const
+{
+    for (auto &v : vSequence[seqNo])
+        std::cout << v << " ";
+}
+
+std::vector<std::string>
+cSequenceHunter::tokenize(
+    const std::string &line)
 {
     std::vector<std::string> ret;
     std::stringstream sst(line);
@@ -59,13 +87,13 @@ std::vector<std::string> tokenize(const std::string &line)
     return ret;
 }
 
-void read(const std::string &fname)
+void cSequenceHunter::read(const std::string &fname)
 {
     std::ifstream ifs(fname);
     if (!ifs.is_open())
         throw std::runtime_error("No input");
 
-    std::vector<std::vector<std::string>> matrix;
+    std::vector<std::vector<std::string>> vv;
 
     std::string line;
     while (getline(ifs, line))
@@ -78,7 +106,7 @@ void read(const std::string &fname)
             std::vector<std::string> row;
             for (int c = 0; c < vtoken.size() - 1; c++)
                 row.push_back(vtoken[c + 1]);
-            matrix.push_back(row);
+            vv.push_back(row);
         }
         else if (vtoken[0] == "s")
         {
@@ -93,45 +121,37 @@ void read(const std::string &fname)
 
     // populate the grid
 
-    int h = matrix.size();
+    int h = vv.size();
     if (!h)
         throw std::runtime_error("bad input");
-    int w = matrix[0].size();
-    pA = new cell::cAutomaton<mcell>(w, h);
+    int w = vv[0].size();
+    matrix = new cell::cAutomaton<mcell>(w, h);
     for (int r = 0; r < h; r++)
     {
-        if (matrix[r].size() != w)
+        if (vv[r].size() != w)
             throw std::runtime_error("bad input");
         for (int c = 0; c < w; c++)
         {
-            pA->cell(c, r)->value = matrix[r][c];
+            matrix->cell(c, r)->value = vv[r][c];
         }
     }
-
-    // display matrix
-    // std::cout << pA->text() << "\n";
 }
 
-void displayFoundSequence(const std::vector<int> &foundSequence)
+void cSequenceHunter::displayFoundSequence(
+    const std::vector<int> &foundSequence) const
 {
     for (int id : foundSequence)
     {
-        auto pmCell = pA->cell(id);
+        auto pmCell = matrix->cell(id);
         int c, r;
-        pA->coords(c, r, pmCell);
+        matrix->coords(c, r, pmCell);
         std::cout << "row " << r << " col " << c << " ";
         std::cout << pmCell->value << "\n";
     }
     std::cout << "\n";
 }
-/// @brief Find sequence with given start point
-/// @param[in] seqNo index of sequence sought
-/// @param[in] foundSequence vector with index of starting cell
-/// @param[out] foundSequence vector with indices of cells in sequence, or empty on failure
-/// @param[in] vert true if previous move was vertical
-/// @return true if sequence found
 
-bool findSequenceFromStart(
+bool cSequenceHunter::findSequenceFromStart(
     int seqNo,
     std::vector<int> &foundSequence,
     bool vert)
@@ -139,7 +159,7 @@ bool findSequenceFromStart(
     auto foundSequencebackup = foundSequence;
 
     int w, h;
-    pA->size(w, h);
+    matrix->size(w, h);
     bool found = true;
     while (found)
     {
@@ -147,9 +167,9 @@ bool findSequenceFromStart(
         vert = (!vert);
 
         // start from last cell found
-        auto pmCell = pA->cell(foundSequence.back());
+        auto pmCell = matrix->cell(foundSequence.back());
         int c, r;
-        pA->coords(c, r, pmCell);
+        matrix->coords(c, r, pmCell);
 
         // look for next value in required sequence
         std::string nextValue = vSequence[seqNo][foundSequence.size()];
@@ -160,9 +180,9 @@ bool findSequenceFromStart(
             // loop over cells in column
             for (int r2 = 1; r2 < w; r2++)
             {
-                if (pA->cell(c, r2)->value == nextValue)
+                if (matrix->cell(c, r2)->value == nextValue)
                 {
-                    foundSequence.push_back(pA->cell(c, r2)->ID());
+                    foundSequence.push_back(matrix->cell(c, r2)->ID());
                     found = true;
                     break;
                 }
@@ -173,15 +193,16 @@ bool findSequenceFromStart(
             // loop over cells in row
             for (int c2 = 0; c2 < h; c2++)
             {
-                if (pA->cell(c2, r)->value == nextValue)
+                if (matrix->cell(c2, r)->value == nextValue)
                 {
-                    foundSequence.push_back(pA->cell(c2, r)->ID());
+                    foundSequence.push_back(matrix->cell(c2, r)->ID());
                     found = true;
                     break;
                 }
             }
         }
-        if (!found) {
+        if (!found)
+        {
             foundSequence = foundSequencebackup;
             return false;
         }
@@ -193,12 +214,12 @@ bool findSequenceFromStart(
         "Should never come here");
 }
 
-std::vector<int> findSequenceStart(int seqNo)
+std::vector<int> cSequenceHunter::findSequenceStart(int seqNo)
 {
     raven::set::cRunWatch aWatcher("findSequence");
 
     int w, h;
-    pA->size(w, h);
+    matrix->size(w, h);
     std::vector<int> foundSequence;
     bool found = false;
     bool vert = false;
@@ -209,9 +230,9 @@ std::vector<int> findSequenceStart(int seqNo)
         foundSequence.clear();
         found = false;
 
-        if (pA->cell(c, 0)->value == vSequence[seqNo][0])
+        if (matrix->cell(c, 0)->value == vSequence[seqNo][0])
         {
-            foundSequence.push_back(pA->cell(c, 0)->ID());
+            foundSequence.push_back(matrix->cell(c, 0)->ID());
 
             if (findSequenceFromStart(
                     seqNo,
@@ -229,9 +250,9 @@ std::vector<int> findSequenceStart(int seqNo)
     {
         for (int r = 1; r < h; r++)
         {
-            if (pA->cell(c, r)->value == vSequence[seqNo][0])
+            if (matrix->cell(c, r)->value == vSequence[seqNo][0])
             {
-                foundSequence.push_back(pA->cell(c, r)->ID());
+                foundSequence.push_back(matrix->cell(c, r)->ID());
                 vert = false;
                 if (findSequenceFromStart(
                         seqNo,
@@ -261,19 +282,23 @@ main()
 {
     raven::set::cRunWatch::Start();
 
-    read("../data/data3.txt");
+    cSequenceHunter theHunter;
 
-    std::cout << "Searching\n"
-              << pA->text() << "\n";
+    theHunter.read("../data/data3.txt");
 
-    for (int seqNo = 0; seqNo < vSequence.size(); seqNo++)
+    std::cout << "Searching\n";
+    theHunter.displayMatrix();
+
+    for (
+        int seqNo = 0;
+        seqNo < theHunter.sequenceCount();
+        seqNo++)
     {
         std::cout << "for sequence ";
-        for (auto &v : vSequence[seqNo])
-            std::cout << v << " ";
+        theHunter.displaySequence(seqNo);
         std::cout << "\n\n";
-        displayFoundSequence(
-            findSequenceStart(seqNo));
+        theHunter.displayFoundSequence(
+            theHunter.findSequenceStart(seqNo));
     }
 
     raven::set::cRunWatch::Report();

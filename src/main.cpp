@@ -31,7 +31,7 @@ class cSequenceHunter
 public:
     void read(const std::string &fname);
 
-    std::vector<int> findSequenceStart(int seqNo);
+    std::vector<int> findSequence(int seqNo);
 
     int sequenceCount() const;
 
@@ -55,6 +55,13 @@ private:
         int seqNo,
         std::vector<int> &foundSequence,
         bool vert);
+
+    /// @brief find 'wasted moves' required to reach sequence start from first row
+    /// @param foundSequence 
+    /// @return vector of cell indices needed as stepping stones to sequence start
+    
+    std::vector<int> wastedMoves(
+        std::vector<int> &foundSequence);
 
     std::vector<std::string>
     tokenize(
@@ -214,7 +221,7 @@ bool cSequenceHunter::findSequenceFromStart(
         "Should never come here");
 }
 
-std::vector<int> cSequenceHunter::findSequenceStart(int seqNo)
+std::vector<int> cSequenceHunter::findSequence(int seqNo)
 {
     raven::set::cRunWatch aWatcher("findSequence");
 
@@ -246,6 +253,7 @@ std::vector<int> cSequenceHunter::findSequenceStart(int seqNo)
 
     std::cout << "Cannot find sequence starting in 1st row, using wasted moves\n";
 
+    found = false;
     for (int c = 0; c < w; c++)
     {
         for (int r = 1; r < h; r++)
@@ -259,7 +267,8 @@ std::vector<int> cSequenceHunter::findSequenceStart(int seqNo)
                         foundSequence,
                         vert))
                 {
-                    return foundSequence;
+                    found = true;
+                    break;
                 }
                 vert = true;
                 if (findSequenceFromStart(
@@ -267,15 +276,62 @@ std::vector<int> cSequenceHunter::findSequenceStart(int seqNo)
                         foundSequence,
                         vert))
                 {
-                    return foundSequence;
+                    found = true;
+                    break;
                 }
             }
         }
+        if (found)
+            break;
+    }
+    if (!found)
+    {
+        std::cout << "Cannot find sequence\n";
+        foundSequence.clear();
+        return foundSequence;
     }
 
-    std::cout << "Cannot find sequence\n";
-    foundSequence.clear();
+    for (int id : wastedMoves(foundSequence))
+    {
+        int wc, wr;
+        matrix->coords(wc, wr, matrix->cell(id));
+        std::cout << "WM " << wc << " " << wr << "\n";
+    }
+
     return foundSequence;
+}
+
+std::vector<int> cSequenceHunter::wastedMoves(std::vector<int> &foundSequence)
+{
+    std::vector<int> ret;
+    int colstart, rowstart;
+    matrix->coords(colstart, rowstart, matrix->cell(foundSequence[0]));
+
+    // check for start in first row
+    if (!rowstart)
+        return ret;
+
+    // find direction of first sequence move
+    int col2, row2;
+    matrix->coords(col2, row2, matrix->cell(foundSequence[1]));
+    bool vert = (rowstart != row2);
+
+    if (!vert)
+    {
+        ret.push_back(matrix->index(colstart, 0));
+    }
+    else
+    {
+        int wmCol;
+        if (colstart > 0)
+            wmCol = colstart - 1;
+        else
+            wmCol = 1;
+
+        ret.push_back(matrix->index(wmCol, 0));
+        ret.push_back(matrix->index(wmCol,rowstart));
+    }
+    return ret;
 }
 
 main()
@@ -298,7 +354,7 @@ main()
         theHunter.displaySequence(seqNo);
         std::cout << "\n\n";
         theHunter.displayFoundSequence(
-            theHunter.findSequenceStart(seqNo));
+            theHunter.findSequence(seqNo));
     }
 
     raven::set::cRunWatch::Report();

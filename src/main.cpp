@@ -150,68 +150,6 @@ void cSequenceHunter::displayFoundSequence(
     std::cout << "\n";
 }
 
-bool cSequenceHunter::findSequenceFromStart(
-    int seqNo,
-    std::vector<int> &foundSequence,
-    bool vert)
-{
-    auto foundSequencebackup = foundSequence;
-
-    int w, h;
-    matrix->size(w, h);
-    bool found = true;
-    while (found)
-    {
-        // toggle search direction
-        vert = (!vert);
-
-        // start from last cell found
-        auto pmCell = matrix->cell(foundSequence.back());
-        int c, r;
-        matrix->coords(c, r, pmCell);
-
-        // look for next value in required sequence
-        std::string nextValue = vSequence[seqNo][foundSequence.size()];
-        found = false;
-
-        if (vert)
-        {
-            // loop over cells in column
-            for (int r2 = 1; r2 < w; r2++)
-            {
-                if (matrix->cell(c, r2)->value == nextValue)
-                {
-                    foundSequence.push_back(matrix->cell(c, r2)->ID());
-                    found = true;
-                    break;
-                }
-            }
-        }
-        else
-        {
-            // loop over cells in row
-            for (int c2 = 0; c2 < h; c2++)
-            {
-                if (matrix->cell(c2, r)->value == nextValue)
-                {
-                    foundSequence.push_back(matrix->cell(c2, r)->ID());
-                    found = true;
-                    break;
-                }
-            }
-        }
-        if (!found)
-        {
-            foundSequence = foundSequencebackup;
-            return false;
-        }
-
-        if (foundSequence.size() == vSequence[seqNo].size())
-            return true;
-    }
-    throw std::runtime_error(
-        "Should never come here");
-}
 
 std::vector<int> cSequenceHunter::findSequence(int seqNo)
 {

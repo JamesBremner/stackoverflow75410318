@@ -3,6 +3,87 @@
 #include <algorithm>
 #include "autocell.h"
 #include "cSequenceHunter.h"
+#include "cRunWatch.h"
+
+std::vector<int> cSequenceHunter::findSequence(int seqNo)
+{
+    raven::set::cRunWatch aWatcher("findSequence");
+
+    int w, h;
+    matrix->size(w, h);
+    std::vector<int> foundSequence;
+    bool found = false;
+    bool vert = false;
+
+    // loop over cells in first row
+    for (int c = 0; c < w; c++)
+    {
+        foundSequence.clear();
+        found = false;
+
+        if (matrix->cell(c, 0)->value == vSequence[seqNo][0])
+        {
+            foundSequence.push_back(matrix->cell(c, 0)->ID());
+
+            if (findSequenceFromStart(
+                    seqNo,
+                    foundSequence,
+                    vert))
+            {
+                return foundSequence;
+            }
+        }
+    }
+
+    std::cout << "Cannot find sequence starting in 1st row, using wasted moves\n";
+
+    found = false;
+    for (int c = 0; c < w; c++)
+    {
+        for (int r = 1; r < h; r++)
+        {
+            if (matrix->cell(c, r)->value == vSequence[seqNo][0])
+            {
+                foundSequence.push_back(matrix->cell(c, r)->ID());
+                vert = false;
+                if (findSequenceFromStart(
+                        seqNo,
+                        foundSequence,
+                        vert))
+                {
+                    found = true;
+                    break;
+                }
+                vert = true;
+                if (findSequenceFromStart(
+                        seqNo,
+                        foundSequence,
+                        vert))
+                {
+                    found = true;
+                    break;
+                }
+            }
+        }
+        if (found)
+            break;
+    }
+    if (!found)
+    {
+        std::cout << "Cannot find sequence\n";
+        foundSequence.clear();
+        return foundSequence;
+    }
+
+    for (int id : wastedMoves(foundSequence))
+    {
+        int wc, wr;
+        matrix->coords(wc, wr, matrix->cell(id));
+        std::cout << "WM " << wc << " " << wr << "\n";
+    }
+
+    return foundSequence;
+}
 
 bool cSequenceHunter::findSequenceFromStart(
     int seqNo,
@@ -53,15 +134,18 @@ bool cSequenceHunter::findSequenceFromStart(
             // loop over cells in row
             for (int c2 = 0; c2 < h; c2++)
             {
-                int id = matrix->cell(c2, r)->ID();
-                // check that cell has not been visited previously
-                if (std::find(
-                        foundSequence.begin(), foundSequence.end(), id) == foundSequence.end())
+                if (matrix->cell(c2, r)->value == nextValue)
                 {
-                    // add cell to sequence
-                    foundSequence.push_back(id);
-                    found = true;
-                    break;
+                    int id = matrix->cell(c2, r)->ID();
+                    // check that cell has not been visited previously
+                    if (std::find(
+                            foundSequence.begin(), foundSequence.end(), id) == foundSequence.end())
+                    {
+                        // add cell to sequence
+                        foundSequence.push_back(id);
+                        found = true;
+                        break;
+                    }
                 }
             }
         }

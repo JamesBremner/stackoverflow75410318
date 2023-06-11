@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bin/seqHunter.exe",
-            "args": ["../data/tid3.txt"],
+            "args": ["../data/wasted2.txt"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/bin",
             "environment": [],

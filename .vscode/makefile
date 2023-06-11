@@ -38,7 +38,7 @@ $(ODIR)/%.o: %.cpp  cSequenceHunter.h
 
 starter: $(OBJ_starter)
 	g++ $(OPT) \
-	-o bin/starter.exe $^  \
+	-o bin/seqHunter.exe $^  \
 	$(static_link_flags) $(LIBS)
 
 .PHONY: clean

@@ -266,13 +266,17 @@ std::vector<int> cSequenceHunter::wastedMoves(std::vector<int> &foundSequence)
 }
 
 
-main()
+main(int argc, char* argv[] )
 {
+    if( argc != 2 ) {
+        std::cout << "Usage: seqHunter <path to data file>\n";
+        exit(1);
+    }
     raven::set::cRunWatch::Start();
 
     cSequenceHunter theHunter;
 
-    theHunter.read("../data/tid3.txt");
+    theHunter.read(argv[1]);
 
     std::cout << "Searching\n";
     theHunter.displayMatrix();

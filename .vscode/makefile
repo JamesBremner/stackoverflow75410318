@@ -20,18 +20,19 @@ static_link_flags = -static-libstdc++ -static-libgcc -static
 ODIR = ./.vscode/obj
 
 
-OPT = -O2
+OPT = -g
 CCflags = -std=c++17 $(OPT) -D_mingw_
 
 # sources
 OBJ_starter = \
 	$(ODIR)/main.o \
+	$(ODIR)/cSequenceHunter.o \
 	$(ODIR)/autocell.o \
 	$(ODIR)/cRunWatch.o \
 
 ### COMPILE
 
-$(ODIR)/%.o: %.cpp  
+$(ODIR)/%.o: %.cpp  cSequenceHunter.h
 	g++  $(CCflags) \
 	-c -o $@ $< $(INCS)
 

@@ -8,65 +8,56 @@
 #include "cStarterGUI.h"
 #include "autocell.h"
 #include "cRunWatch.h"
+#include "cSequenceHunter.h"
 
-class mcell : public cell::cCell
+cSequence::cSequence(
+    cell::cAutomaton<mcell> *m,
+    const std::vector<int> &vid)
+    : matrix(m), myID(vid)
 {
-public:
-    std::string value;
-
-    mcell()
-        : cell::cCell()
-    {
-        value = "?";
-    }
-
-    virtual std::string text()
-    {
-        return value + " ";
-    }
-};
-
-class cSequenceHunter
+    for (int i : myID)
+        myStepType.push_back(eStepType::step);
+}
+bool cSequence::firstStep(
+    int &col,
+    int &row,
+    bool &vert) const
 {
-public:
-    void read(const std::string &fname);
+    if (myID.size() < 2)
+        return false;
+    matrix->coords(col, row, matrix->cell(myID[0]));
+    int c2, r2;
+    matrix->coords(c2, r2, matrix->cell(myID[1]));
+    vert = (row != r2);
+    return true;
+}
+bool cSequence::lastStep(
+    int &col,
+    int &row,
+    bool &vert) const
+{
+    if (myID.size() < 2)
+        return false;
+    int c1, r1;
+    matrix->coords(c1, r1, matrix->cell(myID[myID.size() - 2]));
+    matrix->coords(col, row, matrix->cell(myID[myID.size() - 1]));
+    vert = (row != r1);
+    return true;
+}
 
-    std::vector<int> findSequence(int seqNo);
-
-    int sequenceCount() const;
-
-    void displayMatrix() const;
-    void displaySequence(int seqNo) const;
-    void displayFoundSequence(
-        const std::vector<int> &foundSequence) const;
-
-private:
-    cell::cAutomaton<mcell> *matrix;
-    std::vector<std::vector<std::string>> vSequence;
-
-    /// @brief Find sequence with given start point
-    /// @matrixram[in] seqNo index of sequence sought
-    /// @matrixram[in] foundSequence vector with index of starting cell
-    /// @matrixram[out] foundSequence vector with indices of cells in sequence, or empty on failure
-    /// @matrixram[in] vert true if previous move was vertical
-    /// @return true if sequence found
-
-    bool findSequenceFromStart(
-        int seqNo,
-        std::vector<int> &foundSequence,
-        bool vert);
-
-    /// @brief find 'wasted moves' required to reach sequence start from first row
-    /// @param foundSequence 
-    /// @return vector of cell indices needed as stepping stones to sequence start
-    
-    std::vector<int> wastedMoves(
-        std::vector<int> &foundSequence);
-
-    std::vector<std::string>
-    tokenize(
-        const std::string &line);
-};
+void cSequence::display() const
+{
+    for (int id : myID)
+    {
+        auto pmCell = matrix->cell(id);
+        int c, r;
+        matrix->coords(c, r, pmCell);
+        std::cout << " col " << c << " row " << r
+                  << " value " << pmCell->value
+                  << " id " << id << "\n";
+    }
+    std::cout << "\n";
+}
 
 int cSequenceHunter::sequenceCount() const
 {
@@ -152,8 +143,9 @@ void cSequenceHunter::displayFoundSequence(
         auto pmCell = matrix->cell(id);
         int c, r;
         matrix->coords(c, r, pmCell);
-        std::cout << "row " << r << " col " << c << " ";
-        std::cout << pmCell->value << "\n";
+        std::cout << " col " << c << " row " << r
+                  << " value " << pmCell->value
+                  << " id " << id << "\n";
     }
     std::cout << "\n";
 }
@@ -304,35 +296,37 @@ std::vector<int> cSequenceHunter::findSequence(int seqNo)
 std::vector<int> cSequenceHunter::wastedMoves(std::vector<int> &foundSequence)
 {
     std::vector<int> ret;
+    cSequence SQ(matrix, foundSequence);
     int colstart, rowstart;
-    matrix->coords(colstart, rowstart, matrix->cell(foundSequence[0]));
+    bool vert;
+
+    SQ.firstStep(colstart, rowstart, vert);
 
     // check for start in first row
     if (!rowstart)
         return ret;
 
-    // find direction of first sequence move
-    int col2, row2;
-    matrix->coords(col2, row2, matrix->cell(foundSequence[1]));
-    bool vert = (rowstart != row2);
-
     if (!vert)
     {
+        // the first move in sequence is horizontal
+        // so we can start by simply dropping down from the first row
         ret.push_back(matrix->index(colstart, 0));
     }
     else
     {
-        int wmCol;
-        if (colstart > 0)
-            wmCol = colstart - 1;
-        else
+        // the first move in sequence is vertical
+        // so we need to drop down an adjacent column
+        // and then move horizontally to the starting column
+        int wmCol = colstart - 1;
+        if (colstart == 0)
             wmCol = 1;
 
         ret.push_back(matrix->index(wmCol, 0));
-        ret.push_back(matrix->index(wmCol,rowstart));
+        ret.push_back(matrix->index(wmCol, rowstart));
     }
     return ret;
 }
+
 
 main()
 {
@@ -340,11 +334,12 @@ main()
 
     cSequenceHunter theHunter;
 
-    theHunter.read("../data/data3.txt");
+    theHunter.read("../data/tid3.txt");
 
     std::cout << "Searching\n";
     theHunter.displayMatrix();
 
+    std::vector<std::vector<int>> vSeq;
     for (
         int seqNo = 0;
         seqNo < theHunter.sequenceCount();
@@ -353,8 +348,22 @@ main()
         std::cout << "for sequence ";
         theHunter.displaySequence(seqNo);
         std::cout << "\n\n";
-        theHunter.displayFoundSequence(
-            theHunter.findSequence(seqNo));
+
+        auto fseq = theHunter.findSequence(seqNo);
+        if (fseq.size())
+        {
+            vSeq.push_back(fseq);
+            theHunter.displayFoundSequence(vSeq.back());
+        }
+    }
+
+    std::cout << "\nFound sequences connected in order input\n";
+    for (int k = 0; k < vSeq.size(); k++)
+    {
+        theHunter.displayFoundSequence(vSeq[k]);
+        if (k < vSeq.size() - 1)
+            theHunter.displayFoundSequence(
+                theHunter.connect(vSeq[k], vSeq[k + 1]));
     }
 
     raven::set::cRunWatch::Report();

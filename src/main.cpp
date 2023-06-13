@@ -124,7 +124,7 @@ main(int argc, char* argv[] )
 
     theHunter.read(argv[1]);
 
-    std::cout << "Searching\n";
+    std::cout << "Searching " << argv[1] << "\n";
     theHunter.displayMatrix();
 
     std::vector<std::vector<int>> vSeq;

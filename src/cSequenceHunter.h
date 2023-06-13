@@ -59,6 +59,10 @@ public:
         const std::vector<int> &seq1,
         const std::vector<int> &seq2) const;
 
+    int countSteps(
+        const std::vector<std::vector<int>> &vSeq
+    ) const;
+
     void displayMatrix() const;
     void displayFinal(const std::vector<std::vector<int>>& vSeq) const;
     void displaySequence(int seqNo) const;
@@ -69,7 +73,7 @@ public:
 private:
     cell::cAutomaton<mcell> *matrix;
     std::vector<std::vector<std::string>> vSequence;
-    std::vector<int> vInitialWasted;
+    std::vector<std::vector<int>> vInitialWasted;
     int maxPathLength;
 
     void SetMatrix(

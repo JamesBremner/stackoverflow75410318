@@ -42,14 +42,13 @@ void cSequenceHunter::read(const std::string &fname)
         }
         else if (vtoken[0] == "l")
         {
-            std::cout << "Maximum path length not yet implemented\n";
-            exit(1);
+            maxPathLength = atoi(vtoken[1].c_str());
         }
         else
             throw std::runtime_error("bad input");
     }
 
-    vInitialWasted.resize(vSequence.size(), -1);
+    vInitialWasted.resize(vSequence.size());
 
     // populate the grid
     SetMatrix(vv);
@@ -148,11 +147,10 @@ std::vector<int> cSequenceHunter::findSequence(
         return foundSequence;
     }
 
-    vInitialWasted[seqNo] = -1;
     for (int id : wastedMoves(foundSequence))
     {
-        if (vInitialWasted[seqNo] == -1)
-            vInitialWasted[seqNo] = id;
+        vInitialWasted[seqNo].push_back( id );
+
         int wc, wr;
         matrix->coords(wc, wr, matrix->cell(id));
         std::cout << "WM " << wc << " " << wr << "\n";
@@ -345,12 +343,27 @@ std::vector<int> cSequenceHunter::connect(
     throw std::runtime_error(
         "cSequenceHunter::connect failed");
 }
+
+int cSequenceHunter::countSteps(
+    const std::vector<std::vector<int>> &vSeq) const
+{
+    int count = vInitialWasted[0].size();
+    for (int k = 0; k < vSeq.size(); k++)
+    {
+        count += vSeq[k].size();
+    }
+    return count;
+}
+
 void cSequenceHunter::displayFinal(
     const std::vector<std::vector<int>> &vSeq) const
 {
     std::cout << "\nFound sequences connected in order input\n";
-    std::cout << "WM ";
-    displayCell(vInitialWasted[0]);
+    for( int id : vInitialWasted[0])
+    {
+        std::cout << "WM ";
+        displayCell(id);
+    }
     for (int k = 0; k < vSeq.size(); k++)
     {
         displayFoundSequence(vSeq[k]);
@@ -358,6 +371,12 @@ void cSequenceHunter::displayFinal(
             displayFoundSequence(
                 connect(vSeq[k], vSeq[k + 1]));
     }
+
+    int steps = countSteps(vSeq);
+    if (steps > maxPathLength)
+        throw std::runtime_error(
+            std::to_string(steps) +
+            " Exceeds maximum path length");
 }
 
 void cSequenceHunter::displayFoundSequence(
@@ -366,11 +385,6 @@ void cSequenceHunter::displayFoundSequence(
     for (int id : foundSequence)
         displayCell(id);
     std::cout << "\n";
-
-    if (foundSequence.size() > maxPathLength)
-        throw std::runtime_error(
-            std::to_string(foundSequence.size()) +
-            " Exceeds maximum path length");
 }
 void cSequenceHunter::displayMatrix() const
 {

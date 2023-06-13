@@ -11,3 +11,5 @@ On each turn, you need to switch between column and row and stay on the same lin
 Always start with picking the first cell from the top row, then go vertically down to pick the second cell, and then continue switching between column and row as usual.
 
 You can't choose the same cell twice. The resulting path must not contain duplicated cells.
+
+![image](https://user-images.githubusercontent.com/1078056/244896160-4554dc28-ae79-490c-aa39-8f8fd68a9ed7.png)

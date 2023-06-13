@@ -1,5 +1,4 @@
 #include <string>
-#include <fstream>
 #include <sstream>
 #include <iostream>
 #include <vector>
@@ -83,71 +82,6 @@ cSequenceHunter::tokenize(
     while (getline(sst, a, ' '))
         ret.push_back(a);
     return ret;
-}
-
-void cSequenceHunter::read(const std::string &fname)
-{
-    std::ifstream ifs(fname);
-    if (!ifs.is_open())
-        throw std::runtime_error("No input");
-
-    std::vector<std::vector<std::string>> vv;
-
-    std::string line;
-    while (getline(ifs, line))
-    {
-        auto vtoken = tokenize(line);
-        if (!vtoken.size())
-            continue;
-        if (vtoken[0] == "m")
-        {
-            std::vector<std::string> row;
-            for (int c = 0; c < vtoken.size() - 1; c++)
-                row.push_back(vtoken[c + 1]);
-            vv.push_back(row);
-        }
-        else if (vtoken[0] == "s")
-        {
-            std::vector<std::string> seq;
-            for (int c = 0; c < vtoken.size() - 1; c++)
-                seq.push_back(vtoken[c + 1]);
-            vSequence.push_back(seq);
-        }
-        else
-            throw std::runtime_error("bad input");
-    }
-
-    // populate the grid
-
-    int h = vv.size();
-    if (!h)
-        throw std::runtime_error("bad input");
-    int w = vv[0].size();
-    matrix = new cell::cAutomaton<mcell>(w, h);
-    for (int r = 0; r < h; r++)
-    {
-        if (vv[r].size() != w)
-            throw std::runtime_error("bad input");
-        for (int c = 0; c < w; c++)
-        {
-            matrix->cell(c, r)->value = vv[r][c];
-        }
-    }
-}
-
-void cSequenceHunter::displayFoundSequence(
-    const std::vector<int> &foundSequence) const
-{
-    for (int id : foundSequence)
-    {
-        auto pmCell = matrix->cell(id);
-        int c, r;
-        matrix->coords(c, r, pmCell);
-        std::cout << " col " << c << " row " << r
-                  << " value " << pmCell->value
-                  << " id " << id << "\n";
-    }
-    std::cout << "\n";
 }
 
 

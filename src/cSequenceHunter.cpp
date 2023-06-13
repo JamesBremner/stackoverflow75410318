@@ -1,9 +1,79 @@
 #include <vector>
 #include <iostream>
+#include <fstream>
 #include <algorithm>
 #include "autocell.h"
 #include "cSequenceHunter.h"
 #include "cRunWatch.h"
+
+cSequenceHunter::cSequenceHunter()
+    : matrix(0),
+      maxPathLength(INT_MAX)
+{
+}
+
+void cSequenceHunter::read(const std::string &fname)
+{
+    std::ifstream ifs(fname);
+    if (!ifs.is_open())
+        throw std::runtime_error("No input");
+
+    std::vector<std::vector<std::string>> vv;
+
+    std::string line;
+    while (getline(ifs, line))
+    {
+        auto vtoken = tokenize(line);
+        if (!vtoken.size())
+            continue;
+        if (vtoken[0] == "m")
+        {
+            std::vector<std::string> row;
+            for (int c = 0; c < vtoken.size() - 1; c++)
+                row.push_back(vtoken[c + 1]);
+            vv.push_back(row);
+        }
+        else if (vtoken[0] == "s")
+        {
+            std::vector<std::string> seq;
+            for (int c = 0; c < vtoken.size() - 1; c++)
+                seq.push_back(vtoken[c + 1]);
+            vSequence.push_back(seq);
+        }
+        else if (vtoken[0] == "l")
+        {
+            std::cout << "Maximum path length not yet implemented\n";
+            exit(1);
+        }
+        else
+            throw std::runtime_error("bad input");
+    }
+
+    // populate the grid
+    SetMatrix(vv);
+}
+
+void cSequenceHunter::SetMatrix(
+    const std::vector<std::vector<std::string>> &vv)
+{
+    // find matrix dimensions
+    int h = vv.size();
+    if (!h)
+        throw std::runtime_error("bad input");
+    int w = vv[0].size();
+
+    delete matrix;
+    matrix = new cell::cAutomaton<mcell>(w, h);
+    for (int r = 0; r < h; r++)
+    {
+        if (vv[r].size() != w)
+            throw std::runtime_error("bad input");
+        for (int c = 0; c < w; c++)
+        {
+            matrix->cell(c, r)->value = vv[r][c];
+        }
+    }
+}
 
 std::vector<int> cSequenceHunter::findSequence(int seqNo)
 {
@@ -240,8 +310,8 @@ std::vector<int> cSequenceHunter::connect(
                 int row = rowstart - 1;
                 if (rowstart == 0)
                     row = 1;
-                if( rowstart == rowCount-1)
-                    row = rowCount-2;
+                if (rowstart == rowCount - 1)
+                    row = rowCount - 2;
                 ret.push_back(matrix->index(colstart, row));
                 ret.push_back(matrix->index(colend, row));
                 throw 1;
@@ -268,4 +338,24 @@ std::vector<int> cSequenceHunter::connect(
     }
     throw std::runtime_error(
         "cSequenceHunter::connect failed");
+}
+
+void cSequenceHunter::displayFoundSequence(
+    const std::vector<int> &foundSequence) const
+{
+    for (int id : foundSequence)
+    {
+        auto pmCell = matrix->cell(id);
+        int c, r;
+        matrix->coords(c, r, pmCell);
+        std::cout << " col " << c << " row " << r
+                  << " value " << pmCell->value
+                  << " id " << id << "\n";
+    }
+    std::cout << "\n";
+
+    if( foundSequence.size() > maxPathLength )
+        throw std::runtime_error(
+            std::to_string(foundSequence.size()) +
+            " Exceeds maximum path length" );
 }

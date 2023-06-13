@@ -46,6 +46,8 @@ private:
 class cSequenceHunter
 {
 public:
+    cSequenceHunter();
+
     void read(const std::string &fname);
 
     std::vector<int> findSequence(int seqNo);
@@ -64,6 +66,10 @@ public:
 private:
     cell::cAutomaton<mcell> *matrix;
     std::vector<std::vector<std::string>> vSequence;
+    int maxPathLength;
+
+    void SetMatrix(
+        const std::vector<std::vector<std::string>>& vv );
 
     /// @brief Find sequence with given start point
     /// @matrixram[in] seqNo index of sequence sought

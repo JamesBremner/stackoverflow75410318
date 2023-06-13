@@ -49,6 +49,8 @@ void cSequenceHunter::read(const std::string &fname)
             throw std::runtime_error("bad input");
     }
 
+    vInitialWasted.resize(vSequence.size(), -1);
+
     // populate the grid
     SetMatrix(vv);
 }
@@ -75,7 +77,8 @@ void cSequenceHunter::SetMatrix(
     }
 }
 
-std::vector<int> cSequenceHunter::findSequence(int seqNo)
+std::vector<int> cSequenceHunter::findSequence(
+    int seqNo)
 {
     raven::set::cRunWatch aWatcher("findSequence");
 
@@ -145,8 +148,11 @@ std::vector<int> cSequenceHunter::findSequence(int seqNo)
         return foundSequence;
     }
 
+    vInitialWasted[seqNo] = -1;
     for (int id : wastedMoves(foundSequence))
     {
+        if (vInitialWasted[seqNo] == -1)
+            vInitialWasted[seqNo] = id;
         int wc, wr;
         matrix->coords(wc, wr, matrix->cell(id));
         std::cout << "WM " << wc << " " << wr << "\n";
@@ -233,8 +239,8 @@ bool cSequenceHunter::findSequenceFromStart(
 }
 
 std::vector<int> cSequenceHunter::connect(
-    std::vector<int> &seq1,
-    std::vector<int> &seq2)
+    const std::vector<int> &seq1,
+    const std::vector<int> &seq2) const
 {
     std::vector<int> ret;
 
@@ -339,23 +345,49 @@ std::vector<int> cSequenceHunter::connect(
     throw std::runtime_error(
         "cSequenceHunter::connect failed");
 }
+void cSequenceHunter::displayFinal(
+    const std::vector<std::vector<int>> &vSeq) const
+{
+    std::cout << "\nFound sequences connected in order input\n";
+    std::cout << "WM ";
+    displayCell(vInitialWasted[0]);
+    for (int k = 0; k < vSeq.size(); k++)
+    {
+        displayFoundSequence(vSeq[k]);
+        if (k < vSeq.size() - 1)
+            displayFoundSequence(
+                connect(vSeq[k], vSeq[k + 1]));
+    }
+}
 
 void cSequenceHunter::displayFoundSequence(
     const std::vector<int> &foundSequence) const
 {
     for (int id : foundSequence)
-    {
-        auto pmCell = matrix->cell(id);
-        int c, r;
-        matrix->coords(c, r, pmCell);
-        std::cout << " col " << c << " row " << r
-                  << " value " << pmCell->value
-                  << " id " << id << "\n";
-    }
+        displayCell(id);
     std::cout << "\n";
 
-    if( foundSequence.size() > maxPathLength )
+    if (foundSequence.size() > maxPathLength)
         throw std::runtime_error(
             std::to_string(foundSequence.size()) +
-            " Exceeds maximum path length" );
+            " Exceeds maximum path length");
+}
+void cSequenceHunter::displayMatrix() const
+{
+    std::cout << matrix->text() << "\n";
+}
+void cSequenceHunter::displaySequence(int seqNo) const
+{
+    for (auto &v : vSequence[seqNo])
+        std::cout << v << " ";
+}
+
+void cSequenceHunter::displayCell(int id) const
+{
+    auto pmCell = matrix->cell(id);
+    int c, r;
+    matrix->coords(c, r, pmCell);
+    std::cout << " col " << c << " row " << r
+              << " value " << pmCell->value
+              << " id " << id << "\n";
 }

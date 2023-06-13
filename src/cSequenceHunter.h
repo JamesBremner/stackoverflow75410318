@@ -50,22 +50,26 @@ public:
 
     void read(const std::string &fname);
 
-    std::vector<int> findSequence(int seqNo);
+    std::vector<int> findSequence(
+        int seqNo);
 
     int sequenceCount() const;
 
     std::vector<int> connect(
-        std::vector<int> &seq1,
-        std::vector<int> &seq2);
+        const std::vector<int> &seq1,
+        const std::vector<int> &seq2) const;
 
     void displayMatrix() const;
+    void displayFinal(const std::vector<std::vector<int>>& vSeq) const;
     void displaySequence(int seqNo) const;
     void displayFoundSequence(
         const std::vector<int> &foundSequence) const;
+    void displayCell( int id ) const;
 
 private:
     cell::cAutomaton<mcell> *matrix;
     std::vector<std::vector<std::string>> vSequence;
+    std::vector<int> vInitialWasted;
     int maxPathLength;
 
     void SetMatrix(

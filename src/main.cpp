@@ -62,15 +62,7 @@ int cSequenceHunter::sequenceCount() const
 {
     return vSequence.size();
 }
-void cSequenceHunter::displayMatrix() const
-{
-    std::cout << matrix->text() << "\n";
-}
-void cSequenceHunter::displaySequence(int seqNo) const
-{
-    for (auto &v : vSequence[seqNo])
-        std::cout << v << " ";
-}
+
 
 std::vector<std::string>
 cSequenceHunter::tokenize(
@@ -145,7 +137,8 @@ main(int argc, char* argv[] )
         theHunter.displaySequence(seqNo);
         std::cout << "\n\n";
 
-        auto fseq = theHunter.findSequence(seqNo);
+        auto fseq = theHunter.findSequence(
+            seqNo);
         if (fseq.size())
         {
             vSeq.push_back(fseq);
@@ -153,14 +146,7 @@ main(int argc, char* argv[] )
         }
     }
 
-    std::cout << "\nFound sequences connected in order input\n";
-    for (int k = 0; k < vSeq.size(); k++)
-    {
-        theHunter.displayFoundSequence(vSeq[k]);
-        if (k < vSeq.size() - 1)
-            theHunter.displayFoundSequence(
-                theHunter.connect(vSeq[k], vSeq[k + 1]));
-    }
+    theHunter.displayFinal(vSeq);
 
     raven::set::cRunWatch::Report();
     return 0;

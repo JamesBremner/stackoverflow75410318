@@ -170,6 +170,8 @@ std::vector<int> cSequenceHunter::connect(
 
     cSequence SQ1(matrix, seq1);
     cSequence SQ2(matrix, seq2);
+    int colCount, rowCount;
+    matrix->size(colCount, rowCount);
 
     int colstart, rowstart, colend, rowend;
     bool vertstart, vertend;
@@ -217,6 +219,8 @@ std::vector<int> cSequenceHunter::connect(
             int col = colstart - 1;
             if (colstart == 0)
                 col = 1;
+            if (colstart == colCount - 1)
+                col = colCount - 2;
             ret.push_back(matrix->index(col, rowstart));
             ret.push_back(matrix->index(col, rowend));
             throw 1;
@@ -226,6 +230,21 @@ std::vector<int> cSequenceHunter::connect(
         {
             if (vertend)
             {
+                ret.push_back(matrix->index(colend, rowstart));
+                ret.push_back(matrix->index(colend, rowend));
+                throw 1;
+            }
+            else
+            {
+                // std::cout << "horiz end, horiz start\n";
+                int row = rowstart - 1;
+                if (rowstart == 0)
+                    row = 1;
+                if( rowstart == rowCount-1)
+                    row = rowCount-2;
+                ret.push_back(matrix->index(colstart, row));
+                ret.push_back(matrix->index(colend, row));
+                throw 1;
             }
         }
     }

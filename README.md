@@ -1,4 +1,4 @@
-An application that hunts for and connects together specified sequences of values in a 2D matrix
+An application that hunts for and connects together specified sequences of numbers in a 2D matrix
 
 Each sequence is scored with a value.
 

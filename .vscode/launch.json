@@ -8,7 +8,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/bin/seqHunter.exe",
+            "program": "${workspaceFolder}/bin/test.exe",
             "args": ["../data/tid6.txt"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/bin",

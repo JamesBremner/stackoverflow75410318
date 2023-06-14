@@ -30,6 +30,14 @@ OBJ_starter = \
 	$(ODIR)/autocell.o \
 	$(ODIR)/cRunWatch.o \
 
+OBJ_test = \
+	$(ODIR)/test.o \
+	$(ODIR)/cSequenceHunter.o \
+	$(ODIR)/autocell.o \
+	$(ODIR)/cutest.o \
+	$(ODIR)/cRunWatch.o \
+
+
 ### COMPILE
 
 $(ODIR)/%.o: %.cpp  cSequenceHunter.h
@@ -41,7 +49,17 @@ starter: $(OBJ_starter)
 	-o bin/seqHunter.exe $^  \
 	$(static_link_flags) $(LIBS)
 
+test: $(OBJ_test)
+	g++ -o bin/test.exe \
+	$^ $(OPT) \
+	$(static_link_flags) $(LIBS)
+
 .PHONY: clean
 clean:
 	del /q .vscode\\obj\\*.o
+
+
+rebuild: clean test starter
+
+
 

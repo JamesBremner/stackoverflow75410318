@@ -53,6 +53,8 @@ public:
     std::vector<int> findSequence(
         int seqNo);
 
+    bool makePath(const std::vector<int> &order);
+
     int sequenceCount() const;
 
     std::vector<int> connect(
@@ -60,30 +62,33 @@ public:
         const std::vector<int> &seq2) const;
 
     int countSteps(
-        const std::vector<std::vector<int>> &vSeq
-    ) const;
+        const std::vector<std::vector<int>> &vSeq) const;
 
     void displayMatrix() const;
-    void displayFinal(const std::vector<std::vector<int>>& vSeq) const;
+    void displayFinal() const;
     void displaySequence(int seqNo) const;
     void displayFoundSequence(
         const std::vector<int> &foundSequence) const;
-    void displayCell( int id ) const;
+    void displayCell(int id) const;
 
 private:
-    cell::cAutomaton<mcell> *matrix;
-    std::vector<std::vector<std::string>> vSequence;
-    std::vector<std::vector<int>> vInitialWasted;
-    int maxPathLength;
+    cell::cAutomaton<mcell> *matrix;                 /// input matrix of numbers
+    std::vector<std::vector<std::string>> vSequence; /// input sequences
+    int maxPathLength;                               /// input maximum path length
+
+    std::vector<std::vector<int>> vInitialWasted; /// initial wasted steps for each sequence path
+    std::vector<std::vector<int>> vSequencePath;  /// path through each sequence
+
+    std::vector<int> path; /// path to and through all seaquences
 
     void SetMatrix(
-        const std::vector<std::vector<std::string>>& vv );
+        const std::vector<std::vector<std::string>> &vv);
 
     /// @brief Find sequence with given start point
-    /// @matrixram[in] seqNo index of sequence sought
-    /// @matrixram[in] foundSequence vector with index of starting cell
-    /// @matrixram[out] foundSequence vector with indices of cells in sequence, or empty on failure
-    /// @matrixram[in] vert true if previous move was vertical
+    /// @param[in] seqNo index of sequence sought
+    /// @param[in] foundSequence vector with index of starting cell
+    /// @param[out] foundSequence vector with indices of cells in sequence, or empty on failure
+    /// @param[in] vert true if previous move was vertical
     /// @return true if sequence found
 
     bool findSequenceFromStart(
@@ -98,8 +103,19 @@ private:
     std::vector<int> wastedMoves(
         std::vector<int> &foundSequence);
 
+
+
     std::vector<std::string>
     tokenize(
         const std::string &line);
 };
 
+     /// @brief Combine overlapping sequences
+     /// @param seq1 
+     /// @param seq2 
+     /// @return if overlap exists, combined sequence.  If no overlap, {}
+     ///
+     /// e.g. 1,2,3 and 2,3 4 => 1,2,3,4
+     std::vector<int> overlap(
+        const std::vector<int> &seq1,
+        const std::vector<int> &seq2);

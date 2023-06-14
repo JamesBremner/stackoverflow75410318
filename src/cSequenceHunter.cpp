@@ -6,6 +6,55 @@
 #include "cSequenceHunter.h"
 #include "cRunWatch.h"
 
+cSequence::cSequence(
+    cell::cAutomaton<mcell> *m,
+    const std::vector<int> &vid)
+    : matrix(m), myID(vid)
+{
+    for (int i : myID)
+        myStepType.push_back(eStepType::step);
+}
+bool cSequence::firstStep(
+    int &col,
+    int &row,
+    bool &vert) const
+{
+    if (myID.size() < 2)
+        return false;
+    matrix->coords(col, row, matrix->cell(myID[0]));
+    int c2, r2;
+    matrix->coords(c2, r2, matrix->cell(myID[1]));
+    vert = (row != r2);
+    return true;
+}
+bool cSequence::lastStep(
+    int &col,
+    int &row,
+    bool &vert) const
+{
+    if (myID.size() < 2)
+        return false;
+    int c1, r1;
+    matrix->coords(c1, r1, matrix->cell(myID[myID.size() - 2]));
+    matrix->coords(col, row, matrix->cell(myID[myID.size() - 1]));
+    vert = (row != r1);
+    return true;
+}
+
+void cSequence::display() const
+{
+    for (int id : myID)
+    {
+        auto pmCell = matrix->cell(id);
+        int c, r;
+        matrix->coords(c, r, pmCell);
+        std::cout << " col " << c << " row " << r
+                  << " value " << pmCell->value
+                  << " id " << id << "\n";
+    }
+    std::cout << "\n";
+}
+
 cSequenceHunter::cSequenceHunter()
     : matrix(0),
       maxPathLength(INT_MAX)
@@ -49,6 +98,7 @@ void cSequenceHunter::read(const std::string &fname)
     }
 
     vInitialWasted.resize(vSequence.size());
+    vSequencePath.resize(vSequence.size());
 
     // populate the grid
     SetMatrix(vv);
@@ -102,6 +152,7 @@ std::vector<int> cSequenceHunter::findSequence(
                     foundSequence,
                     vert))
             {
+                vSequencePath[seqNo] = foundSequence;
                 return foundSequence;
             }
         }
@@ -143,20 +194,42 @@ std::vector<int> cSequenceHunter::findSequence(
     if (!found)
     {
         std::cout << "Cannot find sequence\n";
-        foundSequence.clear();
-        return foundSequence;
+        return {};
     }
 
     for (int id : wastedMoves(foundSequence))
     {
-        vInitialWasted[seqNo].push_back( id );
+        vInitialWasted[seqNo].push_back(id);
 
         int wc, wr;
         matrix->coords(wc, wr, matrix->cell(id));
         std::cout << "WM " << wc << " " << wr << "\n";
     }
 
+    vSequencePath[seqNo] = foundSequence;
     return foundSequence;
+}
+
+bool cSequenceHunter::makePath(const std::vector<int> &order)
+{
+    path.clear();
+    for (int id : vInitialWasted[order[0]])
+        path.push_back(id);
+    for (int k = 0; k < vSequence.size(); k++)
+    {
+        for (int id : vSequencePath[order[k]])
+        {
+            path.push_back(id);
+        }
+        if (order[k] < vSequence.size() - 1)
+        {
+            for (int id : connect(vSequencePath[order[k]], vSequencePath[order[k] + 1]))
+            {
+                path.push_back(id);
+            }
+        }
+    }
+    return (path.size() < maxPathLength);
 }
 
 bool cSequenceHunter::findSequenceFromStart(
@@ -236,7 +309,52 @@ bool cSequenceHunter::findSequenceFromStart(
         "Should never come here");
 }
 
-std::vector<int> cSequenceHunter::connect(
+std::vector<int>
+overlap(
+    const std::vector<int> &inseq1,
+    const std::vector<int> &inseq2)
+{
+    std::vector<int> ret;
+
+    // find maximum possible overlap
+    int minlength = inseq1.size();
+    if (inseq2.size() < minlength)
+        minlength = inseq2.size();
+    int overlapsize = -1;
+
+    // loop over possible overlap sizes
+    for (int testsize = 1; testsize <= minlength; testsize++)
+    {
+        int i1 = inseq1.size() - testsize;
+        int i2 = 0;
+        bool isOverlap = true;
+        for (int over = 0; over < testsize; over++)
+        {
+            if (inseq1[i1] != inseq2[i2])
+            {
+                isOverlap = false;
+                break;
+            }
+            i1++;
+            i2++;
+        }
+
+        if( isOverlap )
+            overlapsize = testsize;
+    }
+
+    // combine overlapping sequences
+    ret = inseq1;
+    ret.insert(
+        ret.end(),
+        inseq2.begin() + overlapsize,
+        inseq2.end());
+
+    return ret;
+}
+
+std::vector<int>
+cSequenceHunter::connect(
     const std::vector<int> &seq1,
     const std::vector<int> &seq2) const
 {
@@ -254,6 +372,7 @@ std::vector<int> cSequenceHunter::connect(
 
     try
     {
+        overlap(seq1, seq2);
 
         if (colstart == colend &&
             rowstart == rowend)
@@ -355,24 +474,16 @@ int cSequenceHunter::countSteps(
     return count;
 }
 
-void cSequenceHunter::displayFinal(
-    const std::vector<std::vector<int>> &vSeq) const
+void cSequenceHunter::displayFinal() const
 {
+
     std::cout << "\nFound sequences connected in order input\n";
-    for( int id : vInitialWasted[0])
+    for (int id : path)
     {
-        std::cout << "WM ";
         displayCell(id);
     }
-    for (int k = 0; k < vSeq.size(); k++)
-    {
-        displayFoundSequence(vSeq[k]);
-        if (k < vSeq.size() - 1)
-            displayFoundSequence(
-                connect(vSeq[k], vSeq[k + 1]));
-    }
 
-    int steps = countSteps(vSeq);
+    int steps = path.size();
     if (steps > maxPathLength)
         throw std::runtime_error(
             std::to_string(steps) +
@@ -404,4 +515,55 @@ void cSequenceHunter::displayCell(int id) const
     std::cout << " col " << c << " row " << r
               << " value " << pmCell->value
               << " id " << id << "\n";
+}
+
+std::vector<std::string>
+cSequenceHunter::tokenize(
+    const std::string &line)
+{
+    std::vector<std::string> ret;
+    std::stringstream sst(line);
+    std::string a;
+    while (getline(sst, a, ' '))
+        ret.push_back(a);
+    return ret;
+}
+
+int cSequenceHunter::sequenceCount() const
+{
+    return vSequence.size();
+}
+
+std::vector<int> cSequenceHunter::wastedMoves(std::vector<int> &foundSequence)
+{
+    std::vector<int> ret;
+    cSequence SQ(matrix, foundSequence);
+    int colstart, rowstart;
+    bool vert;
+
+    SQ.firstStep(colstart, rowstart, vert);
+
+    // check for start in first row
+    if (!rowstart)
+        return ret;
+
+    if (!vert)
+    {
+        // the first move in sequence is horizontal
+        // so we can start by simply dropping down from the first row
+        ret.push_back(matrix->index(colstart, 0));
+    }
+    else
+    {
+        // the first move in sequence is vertical
+        // so we need to drop down an adjacent column
+        // and then move horizontally to the starting column
+        int wmCol = colstart - 1;
+        if (colstart == 0)
+            wmCol = 1;
+
+        ret.push_back(matrix->index(wmCol, 0));
+        ret.push_back(matrix->index(wmCol, rowstart));
+    }
+    return ret;
 }

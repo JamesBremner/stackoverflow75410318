@@ -3,8 +3,6 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
-#include <wex.h>
-#include "cStarterGUI.h"
 #include "autocell.h"
 #include "cRunWatch.h"
 #include "cSequenceHunter.h"

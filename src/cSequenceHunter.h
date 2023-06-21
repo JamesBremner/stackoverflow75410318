@@ -71,6 +71,11 @@ public:
         const std::vector<int> &foundSequence) const;
     void displayCell(int id) const;
 
+    std::vector<int> getPath() const
+    {
+        return path;
+    }
+
 private:
     cell::cAutomaton<mcell> *matrix;                 /// input matrix of numbers
     std::vector<std::vector<std::string>> vSequence; /// input sequences
@@ -79,7 +84,7 @@ private:
     std::vector<std::vector<int>> vInitialWasted; /// initial wasted steps for each sequence path
     std::vector<std::vector<int>> vSequencePath;  /// path through each sequence
 
-    std::vector<int> path; /// path to and through all seaquences
+    std::vector<int> path; /// path to and through all sequences
 
     void SetMatrix(
         const std::vector<std::vector<std::string>> &vv);
@@ -103,19 +108,17 @@ private:
     std::vector<int> wastedMoves(
         std::vector<int> &foundSequence);
 
-
-
     std::vector<std::string>
     tokenize(
         const std::string &line);
 };
 
-     /// @brief Combine overlapping sequences
-     /// @param seq1 
-     /// @param seq2 
-     /// @return if overlap exists, combined sequence.  If no overlap, {}
-     ///
-     /// e.g. 1,2,3 and 2,3 4 => 1,2,3,4
-     std::vector<int> overlap(
-        const std::vector<int> &seq1,
-        const std::vector<int> &seq2);
+/// @brief Combine overlapping sequences
+/// @param seq1
+/// @param seq2
+/// @return if overlap exists, combined sequence.  If no overlap, {}
+///
+/// e.g. 1,2,3 and 2,3 4 => 1,2,3,4
+std::vector<int> overlap(
+    const std::vector<int> &seq1,
+    const std::vector<int> &seq2);

@@ -126,6 +126,15 @@ void cSequenceHunter::SetMatrix(
     }
 }
 
+void cSequenceHunter::findSequence()
+{
+    for (
+        int seqNo = 0;
+        seqNo < sequenceCount();
+        seqNo++)
+        findSequence(seqNo);
+}
+
 std::vector<int> cSequenceHunter::findSequence(
     int seqNo)
 {
@@ -208,6 +217,20 @@ std::vector<int> cSequenceHunter::findSequence(
 
     vSequencePath[seqNo] = foundSequence;
     return foundSequence;
+}
+
+bool cSequenceHunter::makePath()
+{
+    std::vector<int> order;
+    for (int k = 0; k < sequenceCount(); k++)
+    {
+        order.push_back(k);
+    }
+    if (makePath(order))
+        return true;
+
+    std::reverse(order.begin(), order.end());
+    return makePath(order);
 }
 
 bool cSequenceHunter::makePath(const std::vector<int> &order)
@@ -339,7 +362,7 @@ overlap(
             i2++;
         }
 
-        if( isOverlap )
+        if (isOverlap)
             overlapsize = testsize;
     }
 

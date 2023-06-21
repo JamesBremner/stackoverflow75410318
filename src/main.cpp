@@ -23,33 +23,8 @@ main(int argc, char *argv[])
 
     std::cout << "Searching " << argv[1] << "\n";
     theHunter.displayMatrix();
-
-    for (
-        int seqNo = 0;
-        seqNo < theHunter.sequenceCount();
-        seqNo++)
-    {
-        std::cout << "for sequence ";
-        theHunter.displaySequence(seqNo);
-        std::cout << "\n\n";
-
-        auto fseq = theHunter.findSequence(
-            seqNo);
-        if (fseq.size())
-        {
-            theHunter.displayFoundSequence(fseq);
-        }
-    }
-    std::vector<int> order;
-    for (int k = 0; k < theHunter.sequenceCount(); k++)
-    {
-        order.push_back(k);
-    }
-    if( ! theHunter.makePath(order) ) {
-        std::reverse(order.begin(),order.end());
-        theHunter.makePath( order );
-    }
-
+    theHunter.findSequence();
+    theHunter.makePath();
     theHunter.displayFinal();
 
     raven::set::cRunWatch::Report();

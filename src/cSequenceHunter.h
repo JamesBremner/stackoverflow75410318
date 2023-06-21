@@ -50,9 +50,19 @@ public:
 
     void read(const std::string &fname);
 
+    /// @brief Find the individual sequences
+    void findSequence();
+
+    /// @brief Find a sequence
+    /// @param seqNo 
+    /// @return 
     std::vector<int> findSequence(
         int seqNo);
 
+    /// Path to and through all sequences in optimal order
+    bool makePath();
+
+    /// @brief Path to and through sequences in specified order
     bool makePath(const std::vector<int> &order);
 
     int sequenceCount() const;

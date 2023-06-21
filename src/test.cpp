@@ -21,25 +21,9 @@ TEST(tid3)
 {
     cSequenceHunter theHunter;
     theHunter.read("../data/tid3.txt");
-    for (
-        int seqNo = 0;
-        seqNo < theHunter.sequenceCount();
-        seqNo++)
-    {
-        theHunter.findSequence(
-            seqNo);
-    }
+    theHunter.findSequence();
+    theHunter.makePath();
 
-    std::vector<int> order;
-    for (int k = 0; k < theHunter.sequenceCount(); k++)
-    {
-        order.push_back(k);
-    }
-    if (!theHunter.makePath(order))
-    {
-        std::reverse(order.begin(), order.end());
-        theHunter.makePath(order);
-    }
     auto actual = theHunter.getPath();
     CHECK_EQUAL(5, actual.size());
     std::vector<int> expected{3, 13, 10, 20, 22};

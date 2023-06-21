@@ -61,13 +61,28 @@ cSequenceHunter::cSequenceHunter()
 {
 }
 
-void cSequenceHunter::read(const std::string &fname)
+static std::vector<std::string>
+tokenize(
+    const std::string &line)
+{
+    std::vector<std::string> ret;
+    std::stringstream sst(line);
+    std::string a;
+    while (getline(sst, a, ' '))
+        ret.push_back(a);
+    return ret;
+}
+
+void read(
+    cSequenceHunter &hunter,
+    const std::string &fname)
 {
     std::ifstream ifs(fname);
     if (!ifs.is_open())
         throw std::runtime_error("No input");
 
-    std::vector<std::vector<std::string>> vv;
+    std::vector<std::vector<std::string>> matrix;
+    std::vector<std::vector<std::string>> vSequence;
 
     std::string line;
     while (getline(ifs, line))
@@ -80,7 +95,7 @@ void cSequenceHunter::read(const std::string &fname)
             std::vector<std::string> row;
             for (int c = 0; c < vtoken.size() - 1; c++)
                 row.push_back(vtoken[c + 1]);
-            vv.push_back(row);
+            matrix.push_back(row);
         }
         else if (vtoken[0] == "s")
         {
@@ -91,20 +106,18 @@ void cSequenceHunter::read(const std::string &fname)
         }
         else if (vtoken[0] == "l")
         {
-            maxPathLength = atoi(vtoken[1].c_str());
+            hunter.setMaxPathLength(atoi(vtoken[1].c_str()));
         }
         else
             throw std::runtime_error("bad input");
     }
 
-    vInitialWasted.resize(vSequence.size());
-    vSequencePath.resize(vSequence.size());
-
     // populate the grid
-    SetMatrix(vv);
+    hunter.setMatrix(matrix);
+    hunter.setSequence(vSequence);
 }
 
-void cSequenceHunter::SetMatrix(
+void cSequenceHunter::setMatrix(
     const std::vector<std::vector<std::string>> &vv)
 {
     // find matrix dimensions
@@ -124,6 +137,14 @@ void cSequenceHunter::SetMatrix(
             matrix->cell(c, r)->value = vv[r][c];
         }
     }
+}
+
+void cSequenceHunter::setSequence(
+    const std::vector<std::vector<std::string>> &seq)
+{
+    vSequence = seq;
+    vInitialWasted.resize(vSequence.size());
+    vSequencePath.resize(vSequence.size());
 }
 
 void cSequenceHunter::findSequence()
@@ -538,18 +559,6 @@ void cSequenceHunter::displayCell(int id) const
     std::cout << " col " << c << " row " << r
               << " value " << pmCell->value
               << " id " << id << "\n";
-}
-
-std::vector<std::string>
-cSequenceHunter::tokenize(
-    const std::string &line)
-{
-    std::vector<std::string> ret;
-    std::stringstream sst(line);
-    std::string a;
-    while (getline(sst, a, ' '))
-        ret.push_back(a);
-    return ret;
 }
 
 int cSequenceHunter::sequenceCount() const

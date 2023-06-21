@@ -48,14 +48,12 @@ class cSequenceHunter
 public:
     cSequenceHunter();
 
-    void read(const std::string &fname);
-
     /// @brief Find the individual sequences
     void findSequence();
 
     /// @brief Find a sequence
-    /// @param seqNo 
-    /// @return 
+    /// @param seqNo
+    /// @return
     std::vector<int> findSequence(
         int seqNo);
 
@@ -81,6 +79,15 @@ public:
         const std::vector<int> &foundSequence) const;
     void displayCell(int id) const;
 
+    void setMatrix(
+        const std::vector<std::vector<std::string>> &matrix);
+    void setSequence(
+        const std::vector<std::vector<std::string>> &seq);
+    void setMaxPathLength( int l )
+    {
+        maxPathLength = l;
+    }
+
     std::vector<int> getPath() const
     {
         return path;
@@ -95,9 +102,6 @@ private:
     std::vector<std::vector<int>> vSequencePath;  /// path through each sequence
 
     std::vector<int> path; /// path to and through all sequences
-
-    void SetMatrix(
-        const std::vector<std::vector<std::string>> &vv);
 
     /// @brief Find sequence with given start point
     /// @param[in] seqNo index of sequence sought
@@ -117,11 +121,11 @@ private:
 
     std::vector<int> wastedMoves(
         std::vector<int> &foundSequence);
-
-    std::vector<std::string>
-    tokenize(
-        const std::string &line);
 };
+
+void read(
+    cSequenceHunter &hunter,
+    const std::string &fname);
 
 /// @brief Combine overlapping sequences
 /// @param seq1

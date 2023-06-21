@@ -20,7 +20,7 @@ TEST(overlap)
 TEST(tid3)
 {
     cSequenceHunter theHunter;
-    theHunter.read("../data/tid3.txt");
+    read(theHunter,"../data/tid3.txt");
     theHunter.findSequence();
     theHunter.makePath();
 

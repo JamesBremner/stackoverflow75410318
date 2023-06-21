@@ -19,7 +19,7 @@ main(int argc, char *argv[])
 
     cSequenceHunter theHunter;
 
-    theHunter.read(argv[1]);
+    read(theHunter,argv[1]);
 
     std::cout << "Searching " << argv[1] << "\n";
     theHunter.displayMatrix();
